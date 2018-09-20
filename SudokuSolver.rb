@@ -1,4 +1,5 @@
-require 'pry'
+#enter a string of digits and it will solve
+#Uses recursion
 @count = 0
 def getRow(ind)
   return ind/9
