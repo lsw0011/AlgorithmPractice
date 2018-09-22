@@ -1,4 +1,3 @@
-#!/bin/python3
 #link to problem https://www.hackerrank.com/contests/w29/challenges/a-circle-and-a-square
 import math
 import os
@@ -78,53 +77,110 @@ if __name__ == '__main__':
         else:
             return False
             
-    def squarePoint(square,point):
+    def checkArea(square,point):
+        center = square[4]
         corner=0
         area=0
         while corner<4:
-            if inrange(point, square[corner%4], square[(corner+1)%4]):
-                area += specialcase(point, square[corner%4], square[(corner+1)%4])
-                corner+=1
+            c1 = square[corner%4]
+            c2 = square[(corner+1)%4]
+            if specialcasecheck(c1, c2, point):
+                rectangle = getspecialrectangle(c1,c2)
+                cpoint = centerpoint(rectangle, square)
+                area += specialarea(c1, c2, point, cpoint)
             else:
-                area += normalsolve(point, square[corner%4], square[(corner+1)%4])
-                corner+=1
-        
+                area += normalsolve(point, c1, c2)
+            corner+=1
         return area  
                 
-        
-        
+    def squaretriangle(c1,c2):
+        dimensions = pointsub(c1, c2)
+        area = abs(int(dimensions[0]*dimensions[1]/2))
+        if area == 0:
+            area = dimensions[0]*dimensions[0]+dimensions[1]*dimensions[1]//2
+        return abs(int(dimensions[0]*dimensions[1]/2))
         
     def normalsolve(point, c1, c2):
-        recArea = getrectanglearea(point, c1, c2)
-        t1 = getarea(c1, point)
-        t2 = getarea(c2, point)
-        t3 = getarea(c1, c2)
-        totalarea = recArea - t1 - t2 - t3
+        rec = getrectanglecorners(point, c1, c2)
+        r1 = getrectangle(rec[0],rec[2])
+        t1 = gettriangle(c1, point)
+        t2 = gettriangle(c2, point)
+        t3 = squaretriangle(c1, c2)
+        totalarea = r1 - t1 - t2 - t3
         return abs(int(totalarea))
     
-    def specialcase(point,c1,c2):
-        t1 = getarea(c1,c2)
-        t2 = getarea(c1,point)
-        t3 = getarea(c2,point)
-        area = t1-t2-t3
-        rec1 = getarea([c1[0],c2[1]],point)
-        rec2 = getarea([c2[0],c1[1]],point)
-        if rec1 < rec2:
-            area-=rec1*2
-        else:
-            area-=rec2*2
+    def getsquare(c1, c3):
+        d = pointsub(c1, c3)
+        a = (d[0]*d[0]+d[1]*d[1])/2
+        return a
+        
+        
+        
+    
+    def getrectanglecorners(point, c1, c2):
+        xValues = [point[0], c1[0], c2[0]]
+        yValues = [point[1], c1[1], c2[1]]
+        maxmax = [max(xValues), max(yValues)]
+        minmin = [min(xValues), min(yValues)]
+        maxmin = [maxmax[0], minmin[1]]
+        minmax = [minmin[0], maxmax[1]]
+        rectangle = [maxmax, maxmin, minmin, minmax]
+        return rectangle
+    
+    def getspecialrectangle(c1,c2):
+        xValues = [c1[0], c2[0]]
+        yValues = [c1[1], c2[1]]
+        maxmax = [max(xValues), max(yValues)]
+        minmin = [min(xValues), min(yValues)]
+        maxmin = [maxmax[0], minmin[1]]
+        minmax = [minmin[0], maxmax[1]]
+        rectangle = [maxmax, maxmin, minmin, minmax]
+        return rectangle
+
+    def specialcasecheck(c1, c2, point): #checks to see if a corner of the rectangle falls on the center
+        rectangle = getspecialrectangle(c1, c2)
+        maxmax = rectangle[0]
+        minmin = rectangle[2]
+        if minmin[0] <= point[0] and point[0] <= maxmax[0]:
+            if minmin[1] <= point[1] and point[1] <= maxmax[1]:
+                return True
+        return False
+    
+    def centerpoint(rectangle, square):
+        center = square[4]
+        flag = True
+        curindex = 0
+        index = 0
+        for point in rectangle:
+            dimensions = pointsub(point, center)
+            dist = dimensions[0]*dimensions[0]+dimensions[1]*dimensions[1]
+            if flag:
+                minimum = dist
+                flag = False
+            elif minimum > dist:
+                minimum = dist
+                index = curindex
+            curindex += 1
+        return rectangle[index]
+        
+            
+    def specialarea(c1, c2, point, centerpoint):
+        t1 = gettriangle(c1, point)
+        t2 = gettriangle(c2, point)
+        r1 = getrectangle(point, centerpoint)
+        t3 = squaretriangle(c1, c2)
+        area = t3-t1-t2-r1
         return abs(area)
         
-    def getarea(p1,p2):
-        res = [0,0]
-        res = pointsub(p1,p2)
-        area = abs(res[0]*res[1])
-        if area == 0:
-            area = res[0]*res[0] 
-            if area == 0:
-                area = res[1]*res[1]
-        return area/2
     
+    def gettriangle(corner, point):
+        dimensions = pointsub(corner, point)
+        return abs(int(dimensions[0]*dimensions[1]/2))
+    
+    def getrectangle(corner, point):
+        dimensions = pointsub(corner, point)
+        return abs(int(dimensions[0]*dimensions[1]))
+            
         
     def getrectanglearea(point, c1, c2):
         xValues = [point[0], c1[0], c2[0]]
@@ -151,37 +207,48 @@ if __name__ == '__main__':
         p1[0]=p1[0]//2
         p1[1]=p1[1]//2
         return p1
+    def getmaxs(points):
+        xvals = [points[0][0], points[1][0], points[2][0], points[3][0]]
+        yvals = [points[0][1], points[1][1], points[2][1], points[3][1]]
+        return [max(xvals)//4, max(yvals)//4]
+    def getmins(points):
+        xvals = [points[0][0], points[1][0], points[2][0], points[3][0]]
+        yvals = [points[0][1], points[1][1], points[2][1], points[3][1]]
+        return [min(xvals)//4, min(yvals)//4]
     
-    def squareFill(square, boardset):
+    def squarefill(square, boardset, squarearea):
+        width = boardset[0]
+        height = boardset[1]
         row = 0
-        point = 0
-        area = int(getarea(square[0], square[2]))
-        while row < boardset[1]:
-            while point < boardset[0]:
-                if int(squarePoint(square, [row * 4, point * 4])) == area:
-                    index = row*w+point
-                    print
-                    markboard(boardset[2], index)
-                point += 1
-            point = 0
+        maxvals = getmaxs(square)
+        minvals = getmins(square)
+        while row < height:
+            if row < minvals[1]:
+                row+=1
+                continue
+            if row > maxvals[1]:
+                break
+            column = 0
+            while column < width:
+                if column < minvals[0]:
+                    column+=1
+                    continue
+                if column > maxvals[0]:
+                    break
+                point = [column*4, row*4]
+                area = checkArea(square, point)
+                if area == squarearea:
+                    markboard(boardset, [column, row])
+                column += 1
             row += 1
+            
+        
+
                 
-    
-    # def correctsign(square, point):
-    #     if point[0] > square[0][0] and point[0] > square[2][0]:
-    #         point[0] = -point[0]
-    #     if point[0] < square[0][0] and point[0] < square[2][0]:
-    #         point[0] = -point[0]
-    #     if point[1] > square[0][1] and point[1] > square[2][1]:
-    #         point[1] = -point[1]
-    #     if point[1] < square[0][1] and point[1] < square[2][1]:
-    #         point[1] = -point[1]
-    #     return point
     board = board_construct(w,h)
     boardset = [w,h,board]
     circleset = [circleX, circleY, r]
     circledraw(circleset, boardset)
-    #display_board(boardset)
     c1 = [x1*4,y1*4]
     c2 = [0,0]
     c3 = [x3*4,y3*4]
@@ -189,7 +256,6 @@ if __name__ == '__main__':
     center=[0,0]
     square=[c1,c2,c3,c4,center]
     getcorners(square)
-    squareFill(square, boardset)
+    squarearea = getsquare(square[0],square[2])
+    squarefill(square, boardset, squarearea)
     display_board(boardset)
-    for point in square:
-        markboard(boardset,point)
