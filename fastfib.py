@@ -8,5 +8,4 @@ def fib(num):
 	return fastfib(num, memo)
 
 
-	
 print(fib(9))
